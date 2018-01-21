@@ -1,0 +1,58 @@
+熊熊日記 (2017_08_11)
+              .`!''/, ,. .  , ,, .    ,-     ,   .
+             -`'  _ `  `" `"'`~:~'~'~'":/.\,!`-./!,
+             >-  :,'     ,-'  .:  ._         ., `,-`
+              `.                    '       `.:  |-.
+               -;    `,                 `      ,"
+               ,:   "                    ,"   ;,
+              -;                        `     ::
+              ".                               ;
+              ':  `,     ()_.---._()    ,    ,"
+               =!  '`   .'    "    `.    `  ."
+             .-"""-.    !    " "    !  ,-`""''.
+      _____.'  .'   ;___`._`.___,'_.'_:    .'  :_______
+           :_      .'                 `._     ,'
+ʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔ
+
+新的程式碼組織結構。
+################################################################################
+namespace kuma::data {
+    template <typename T>
+    struct Basic {
+        int f() {
+            return 123;
+        }
+    };
+    template <typename >
+    struct Unfixed {
+
+    };
+}
+namespace kuma {
+
+    template<template<typename>typename...TRAITS>
+    struct Creator {
+        template<typename OBJ>
+        struct Role : TRAITS<OBJ>... {
+            Role(OBJ&) {
+            }
+        };
+        template<typename OBJ>
+        auto operator()(OBJ& obj) {
+            return Role<OBJ>(obj);
+        }
+    };
+
+    template <template<typename>typename... TRAITS>
+    auto role = Creator<TRAITS...>{};
+}
+
+int main() {
+    using namespace kuma;
+    using namespace data;
+    int d;
+    auto r = role<Unfixed, Basic>(d);
+    r.f();
+    return 0;
+}
+################################################################################

@@ -1,0 +1,21 @@
+the instantiation struct is finally finished
+    after the other /two implementations\ has been deprecated
+        recursive version with information carried
+        plain version
+
+the output
+--------------------------------------------------------------------------------
+kuma::meta::Ins_t<test_2::G<test_2::S>>::Type
+test_2::S
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Under_t<test_2::G<test_2::S> >::Type
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Type
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Type
+/*------------------------------------*/
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Type
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Under_t<test_2::G<test_2::S> >::Type
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Type
+kuma::meta::t_null
+kuma::meta::Ins_t<test_2::G2<test_2::G<test_2::S> >>::Type
+--------------------------------------------------------------------------------
+
+

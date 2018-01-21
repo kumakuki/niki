@@ -1,0 +1,148 @@
+熊熊日記 (2017_07_24)
+              .`!''/, ,. .  , ,, .    ,-     ,   .
+             -`'  _ `  `" `"'`~:~'~'~'":/.\,!`-./!,
+             >-  :,'     ,-'  .:  ._         ., `,-`
+              `.                    '       `.:  |-.
+               -;    `,                 `      ,"
+               ,:   "                    ,"   "
+              -;                              ';
+              ".                         ..'  ;"
+              ':  `.     ()_.---._()  .''    ,"
+               =!  '`   .'    "    `.      ."
+             .-"""-.    !    " "    !  ,-`""''.
+      _____.'  .'   ;___`._`.___,'_.'_:    .'  :_______
+           :_      .'                 `._     ,'
+ʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔʕ•ᴥ•ʔ
+最近研究了很多coding structure issues
+
+================================================================================
+issue: virtual function and pimpl vs. template and header-only
+
+--------------------------------------------------------------------------------
+instantiation code are not shared
+    module does not solve this problem
+    explicit instantiation is the only solution
+precompiled header file vs. module
+    diff: whether the context is standalone
+
+--------------------------------------------------------------------------------
+analysis
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+A: use Ad-hoc polymorphism on client code
+
+** flexible, modifiable design
+    independent per-object implementation without inherit abstract classes from other header file
+        * without knowledge about dependents (looking at some header files only)
+when writing server code (with virtual functions, inherits abstract classes)
+    no quirkiness in virtual inheritance
+    no "mandated (covariant) return type, argument type (return, arg type of CRTP function is unknown)"
+object is copyable, thus
+    friend operator return the most derived object
+    parameter be type as non-reference non-pointer parameter, thus...
+        ** multiple object access to same readable memory
+        ** use temporary object for recording one object's status
+improve compiling performance
+    * put implementation .cpp with explicit instantiation (B also can)
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+B: use parameters of abstract types on client code
+
+refactoring
+correctness
+    code analysis
+    guaranteed minimal allowed operation on a argument withing a function
+    override specifier
+    mandated (covariant) return type, argument type (return, arg type of CRTP function is unknown)
+    argument type implicit conversion
+potential run-time performance optimization
+    devirtualization
+        by marked as final
+        in unnamed namespace
+        by global optimization
+compiling performance
+    * separate implementation to .cpp file (A also can)
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+C: use pimpl
+
+more compact IDE diagnostic
+    no chain of a lot "instantiation of....", "required from ...." (really?)
+    less visible symbol
+        --> improve IDE symbol resolving performance
+compiling performance
+    ** no re-parsing for large 3rd header-file
+* forcing explicit instantiation (to let it be cached in .obj)
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+D: be header-only / single translation units on major source files
+
+* handy to write server code
+* handy to write client code: using a template entity conveniently without instantiation elsewhere
+less compiling time because of
+    less duplicated instantiation
+* improve compiling performance by
+    ** by C++ module
+    by MSVC's multi-thread compilation (because it results in less translation units)
+    by use of ccache
+    by MSVC's strong supported precompiled header-file
+* no useless instantiation
+    (without explicit instantiation on class, member function template is instantiated only if be used)
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+E: be multiple translation units
+
+improve compiling performance by
+    ** easy to make a parallel/distributed building each translation unit
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+F: explicit instantiation on-demand (template class without implementation in header)
+
+* no duplicated instantiation among multiple translation units
+when server code be make as an module
+    * avoid its literal changes which are not related to the instantiated code causes re-instantiation
+
+--------------------------------------------------------------------------------
+solution rank:
+
+1. A + C + E + F (previously selected one)
+2. A + C + D
+3. B + E (conventional one)
+
+newly decided (selected)
+    on client code, use Ad-hoc if necessary, otherwise use virtual-based
+    on server code
+        use virtual-base (no CRTP if no require return HOST&)
+        use pimpl if no
+
+================================================================================
+issue: use HOST's traits, subclass's template argument, required boxing or accepting primitives and 3rd
+
+required boxing
+    less server code complex
+each explicit passed subclass's template argument (selected)
+    less using dependent typename
+    no traits for most is required
+    less coding on client code
+using traits & accepting primitives and 3rd
+    less coding on client code
+    no overhead for server code to provide boxing for iterators or other possibly unspecified types for 3rd API
+make code not dependent one host's type: not practical
+
+================================================================================
+issue:
+A: use Ad-hoc-based (mixin, traits, static_cast<HOST*>(this)) on server code
+B: use virtual function and inheritance on server code
+A:
+    for use of pimpl: fixed size on derived
+        but can use meta-programming to calculate the needed size plus with the variable size of base class
+    trivial high performance
+B: (selected)
+    more IDE help
+    performance: devirtualization by marked as final
+    less compiling time
+    impl in .cpp file
+
+================================================================================
+
+最終決定又要再一次把原來pimpl的代碼變header-only。。。不，現階段還是pimpl好了。
